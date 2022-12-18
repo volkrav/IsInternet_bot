@@ -4,9 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-bottle = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+requests = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.10"
