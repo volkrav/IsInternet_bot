@@ -4,4 +4,4 @@ pipenv install autopep8 --dev
 pipenv install requests
 
 
-uvicorn main:app --reload
+uvicorn isnet:app --reload
