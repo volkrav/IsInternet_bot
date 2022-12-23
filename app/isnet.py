@@ -34,19 +34,19 @@ async def set_time_connect(url):
 
 async def report():
     connect_counter = 0
-    connect_state = '🕯 Немає світла'
+    connect_state = 'disable'
     current_state = ''
     while True:
         await asyncio.sleep(5)
         if connect_times['prev_time'] != connect_times['curr_time']:
             connect_times['prev_time'] = connect_times['curr_time']
             connect_counter = 0
-            connect_state = '💡 Є світло'
+            connect_state = 'active'
         else:
             if connect_counter < 5:
                 connect_counter += 1
             else:
-                connect_state = '🕯 Немає світла'
+                connect_state = 'disable'
         if current_state != connect_state:
             current_state = connect_state
             msg = f'{current_state} in {connect_times["curr_time"]}'
