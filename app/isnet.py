@@ -4,7 +4,6 @@ import os
 
 import aiohttp
 import pytz
-import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +11,7 @@ load_dotenv()
 
 url = os.environ.get('URL')
 bot_token = os.environ.get('TOKEN')
+chat_id = os.environ.get('CHAT_ID')
 
 API_link = f'https://api.telegram.org/bot' + bot_token
 connect_times = {'prev_time': '', 'curr_time': ''}
@@ -25,14 +25,14 @@ async def check_connect(session, url):
         return False
 
 
-async def set_time_connect(url):
-    async with aiohttp.ClientSession() as session:
-        while True:
-            if await check_connect(session, url):
-                connect_times['curr_time'] = _get_now_formatted()
+async def set_time_connect(session, url):
+    while True:
+        await asyncio.sleep(3)
+        if await check_connect(session, url):
+            connect_times['curr_time'] = _get_now_formatted()
 
 
-async def report():
+async def report(session):
     connect_counter = 0
     connect_state = '🔴 Немає світла'
     current_state = ''
@@ -49,11 +49,12 @@ async def report():
                 connect_state = '🔴 Немає світла'
         if current_state != connect_state:
             current_state = connect_state
-            msg = f'{current_state}\n{connect_times["curr_time"]}'
+            msg = f'{current_state} -> {connect_times["curr_time"]}'
             if _is_day():
                 try:
-                    requests.get(
-                        API_link + f"/sendMessage?chat_id=234043544&text={msg}")
+                    await session.get(
+                        API_link + f"/sendMessage?chat_id={chat_id}&text={msg}"
+                    )
                 except:
                     pass
 
@@ -69,15 +70,16 @@ def _get_now_formatted() -> str:
 
 
 def _is_day() -> bool:
-    return True
-    # return 7 < datetime.datetime.now().hour < 22
+    return 7 < datetime.datetime.now().hour < 24
 
 
 async def main():
     tasks = []
-    tasks.append(asyncio.ensure_future(set_time_connect(url)))
-    tasks.append(asyncio.ensure_future(report()))
-    await asyncio.gather(*tasks)
+    async with aiohttp.ClientSession() as session:
+
+        tasks.append(asyncio.ensure_future(set_time_connect(session, url)))
+        tasks.append(asyncio.ensure_future(report(session)))
+        await asyncio.gather(*tasks)
 
 
 asyncio.run(main())
