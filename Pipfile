@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 asyncio = "*"
 aiohttp = "*"
-requests = "*"
 pytz = "*"
 python-dotenv = "*"
 
