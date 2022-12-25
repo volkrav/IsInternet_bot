@@ -2,6 +2,8 @@ import asyncio
 
 from app import config
 from app.services.utils import get_now_formatted, is_day
+from app.models.devices import Devices
+
 
 connect_times = {'prev_time': '', 'curr_time': ''}
 
@@ -29,14 +31,14 @@ async def set_time_connect(session) -> None:
 
     while True:
         await asyncio.sleep(10)
-        for url in config.urls:
+        for dev in Devices()._get_all_devices():
             if config.PING:
                 check_connect = sending_ping_request
             else:
                 check_connect = sending_web_request
-                url = 'http://' + url + ':' + config.port + '/'
-            print(url)
-            if await check_connect(session, url):
+                url = 'http://' + dev.ip + ':' + config.port + '/'
+            print(dev.ip)
+            if await check_connect(session, dev.ip):
                 connect_times['curr_time'] = get_now_formatted()
 
 async def report(session) -> None:
