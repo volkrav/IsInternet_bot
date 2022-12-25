@@ -13,6 +13,7 @@ url = os.environ.get('URL')
 bot_token = os.environ.get('TOKEN')
 chat_id = os.environ.get('CHAT_ID')
 port = os.environ.get('PORT')
+port = os.environ.get('PORT')
 
 API_link = f'https://api.telegram.org/bot' + bot_token
 connect_times = {'prev_time': '', 'curr_time': ''}
@@ -22,6 +23,21 @@ PING = True
 
 async def sending_ping_request(session, ip):
     print('worked ping')
+    reply = await asyncio.create_subprocess_shell(
+        f"ping -c 1 -n {ip}",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stdout, stderr = await reply.communicate()
+
+    ip_is_reachable = reply.returncode == 0
+    return ip_is_reachable
+
+PING = True
+
+
+async def sending_ping_request(session, ip):
     reply = await asyncio.create_subprocess_shell(
         f"ping -c 1 -n {ip}",
         stdout=asyncio.subprocess.PIPE,
@@ -44,6 +60,11 @@ async def sending_web_request(session, url):
 
 
 async def set_time_connect(session, url):
+    if PING:
+        check_connect = sending_ping_request
+    else:
+        check_connect = sending_web_request
+        url = 'http://' + url + ':' + port + '/'
     if PING:
         check_connect = sending_ping_request
     else:
