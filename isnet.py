@@ -5,14 +5,13 @@ from aiohttp import ClientSession
 from app.services.checker import set_time_connect, report
 # from app.services.notify import report
 
-from app.config import urls
 
 async def main() -> None:
     tasks = []
     async with ClientSession() as session:
 
-        tasks.append(asyncio.ensure_future(set_time_connect(session)))
-        tasks.append(asyncio.ensure_future(report(session)))
+        tasks.append(asyncio.create_task(set_time_connect(session)))
+        tasks.append(asyncio.create_task(report(session)))
         await asyncio.gather(*tasks)
 
 

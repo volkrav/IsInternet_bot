@@ -26,14 +26,15 @@ async def sending_web_request(session, url) -> bool:
 
 
 async def set_time_connect(session) -> None:
-    if config.PING:
-        check_connect = sending_ping_request
-    else:
-        check_connect = sending_web_request
-        url = 'http://' + url + ':' + config.port + '/'
+
     while True:
         await asyncio.sleep(10)
         for url in config.urls:
+            if config.PING:
+                check_connect = sending_ping_request
+            else:
+                check_connect = sending_web_request
+                url = 'http://' + url + ':' + config.port + '/'
             print(url)
             if await check_connect(session, url):
                 connect_times['curr_time'] = get_now_formatted()
