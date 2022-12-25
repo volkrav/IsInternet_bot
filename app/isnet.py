@@ -21,8 +21,7 @@ connect_times = {'prev_time': '', 'curr_time': ''}
 PING = True
 
 
-async def sending_ping_request(session, ip):
-    print('worked ping')
+async def sending_ping_request(_, ip) -> bool:
     reply = await asyncio.create_subprocess_shell(
         f"ping -c 1 -n {ip}",
         stdout=asyncio.subprocess.PIPE,
@@ -31,27 +30,10 @@ async def sending_ping_request(session, ip):
 
     stdout, stderr = await reply.communicate()
 
-    ip_is_reachable = reply.returncode == 0
-    return ip_is_reachable
-
-PING = True
+    return reply.returncode == 0
 
 
-async def sending_ping_request(session, ip):
-    reply = await asyncio.create_subprocess_shell(
-        f"ping -c 1 -n {ip}",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-
-    stdout, stderr = await reply.communicate()
-
-    ip_is_reachable = reply.returncode == 0
-    return ip_is_reachable
-
-
-async def sending_web_request(session, url):
-    print('worked web')
+async def sending_web_request(session, url) -> bool:
     try:
         async with session.get(url) as resp:
             return resp.status == 200
@@ -59,12 +41,7 @@ async def sending_web_request(session, url):
         return False
 
 
-async def set_time_connect(session, url):
-    if PING:
-        check_connect = sending_ping_request
-    else:
-        check_connect = sending_web_request
-        url = 'http://' + url + ':' + port + '/'
+async def set_time_connect(session, url) -> None:
     if PING:
         check_connect = sending_ping_request
     else:
@@ -76,7 +53,7 @@ async def set_time_connect(session, url):
             connect_times['curr_time'] = _get_now_formatted()
 
 
-async def report(session):
+async def report(session) -> None:
     connect_counter = 0
     connect_state = '🔴 Немає світла'
     current_state = ''
@@ -117,7 +94,7 @@ def _is_day() -> bool:
     return 7 < datetime.datetime.now().hour < 24
 
 
-async def main():
+async def main() -> None:
     tasks = []
     async with aiohttp.ClientSession() as session:
 
