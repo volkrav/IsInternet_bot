@@ -11,7 +11,7 @@ class Device(BaseModel):
     port: str
     state: str
     chat_id: str
-    index: int
+    id: int
 
 
 class Devices(object):
@@ -22,16 +22,16 @@ class Devices(object):
     #     if not os.path.exists(self._dev_dir):
     #         os.makedirs(self._dev_dir)
 
-    @classmethod
-    def get_instance(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls, *args, **kwargs)
-            cls.__init__(cls._instance, args, **kwargs)
-        return cls._instance
+    # @classmethod
+    # def get_instance(cls, *args, **kwargs):
+    #     if cls._instance is None:
+    #         cls._instance = super().__new__(cls, *args, **kwargs)
+    #         cls.__init__(cls._instance, args, **kwargs)
+    #     return cls._instance
 
     def __init__(self) -> None:
         self._dev_dir = os.path.join(RESOURCES_DIR, "devices")
-        self._devices = self._get_all_devices()
+        self._devices = self.get_all_devices()
 
     def __len__(self):
         return len(self._devices)
@@ -39,7 +39,7 @@ class Devices(object):
     def __getitem__(self, position):
         return self._devices[position]
 
-    def _get_all_devices(self):
+    def get_all_devices(self):
         devices = []
         for dev in os.listdir(self._dev_dir):
             if dev.endswith(".json"):
@@ -48,6 +48,6 @@ class Devices(object):
         return devices
 
 
-# dev = Devices()
-# for d in dev:
-#     print(d)
+dev = Devices()
+for d in dev:
+    print(d)

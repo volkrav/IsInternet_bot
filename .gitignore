@@ -1,5 +1,5 @@
 *.sh
 .env
 *.txt
-__pycache__
+__pycache__/
 *.pyc
