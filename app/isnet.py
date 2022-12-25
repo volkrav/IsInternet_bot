@@ -12,12 +12,30 @@ load_dotenv()
 url = os.environ.get('URL')
 bot_token = os.environ.get('TOKEN')
 chat_id = os.environ.get('CHAT_ID')
+port = os.environ.get('PORT')
 
 API_link = f'https://api.telegram.org/bot' + bot_token
 connect_times = {'prev_time': '', 'curr_time': ''}
 
+PING = True
 
-async def check_connect(session, url):
+
+async def sending_ping_request(session, ip):
+    print('worked ping')
+    reply = await asyncio.create_subprocess_shell(
+        f"ping -c 1 -n {ip}",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stdout, stderr = await reply.communicate()
+
+    ip_is_reachable = reply.returncode == 0
+    return ip_is_reachable
+
+
+async def sending_web_request(session, url):
+    print('worked web')
     try:
         async with session.get(url) as resp:
             return resp.status == 200
@@ -26,8 +44,13 @@ async def check_connect(session, url):
 
 
 async def set_time_connect(session, url):
+    if PING:
+        check_connect = sending_ping_request
+    else:
+        check_connect = sending_web_request
+        url = 'http://' + url + ':' + port + '/'
     while True:
-        await asyncio.sleep(3)
+        await asyncio.sleep(10)
         if await check_connect(session, url):
             connect_times['curr_time'] = _get_now_formatted()
 
@@ -37,7 +60,7 @@ async def report(session):
     connect_state = '🔴 Немає світла'
     current_state = ''
     while True:
-        await asyncio.sleep(5)
+        await asyncio.sleep(20)
         if connect_times['prev_time'] != connect_times['curr_time']:
             connect_times['prev_time'] = connect_times['curr_time']
             connect_counter = 0
@@ -49,11 +72,11 @@ async def report(session):
                 connect_state = '🔴 Немає світла'
         if current_state != connect_state:
             current_state = connect_state
-            msg = f'{current_state} -> {connect_times["curr_time"]}'
+            msg = f'{current_state} : {connect_times["curr_time"]}'
             if _is_day():
                 try:
                     await session.get(
-                        API_link + f"/sendMessage?chat_id={chat_id}&text={msg}"
+                        API_link + f'/sendMessage?chat_id={chat_id}&text={msg}'
                     )
                 except:
                     pass
