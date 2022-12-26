@@ -30,7 +30,7 @@ async def sending_web_request(session, url) -> bool:
 async def set_time_connect(session) -> None:
 
     while True:
-        await asyncio.sleep(10)
+        await asyncio.sleep(3)
         for dev in Devices().get_all_devices():
             if config.PING:
                 check_connect = sending_ping_request
@@ -46,7 +46,7 @@ async def report(session) -> None:
     connect_state = '🔴 Немає світла'
     current_state = ''
     while True:
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
         if connect_times['prev_time'] != connect_times['curr_time']:
             connect_times['prev_time'] = connect_times['curr_time']
             connect_counter = 0
@@ -58,7 +58,7 @@ async def report(session) -> None:
                 connect_state = '🔴 Немає світла'
         if current_state != connect_state:
             current_state = connect_state
-            msg = f'{current_state} : {connect_times["curr_time"]}'
+            msg = f'{current_state}%0A{connect_times["curr_time"]}'
             if is_day():
                 try:
                     await session.get(
