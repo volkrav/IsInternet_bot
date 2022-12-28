@@ -3,9 +3,10 @@ import datetime
 import pytz
 
 
+TZ = pytz.timezone("Europe/Kiev")
+
 def _get_now_datetime() -> datetime.datetime:
-    tz = pytz.timezone("Europe/Kiev")
-    now = datetime.datetime.now(tz)
+    now = datetime.datetime.now(TZ)
     return now
 
 
@@ -14,4 +15,4 @@ def get_now_formatted() -> str:
 
 
 def is_day() -> bool:
-    return 7 < datetime.datetime.now().hour < 24
+    return 7 < datetime.datetime.now(TZ).hour < 24
