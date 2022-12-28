@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 import os
+import asyncio
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESOURCES_DIR = os.path.join(BASE_DIR, 'resources')
@@ -9,45 +10,47 @@ class Device(BaseModel):
     name: str
     ip: str
     port: str
-    state: str
+    status: str | None
     chat_id: str
     id: int
 
 
-class Devices(object):
-    _instance = None
-    _dev_dir = None
+async def get_all_devices() -> Device:
+    loop = asyncio.get_running_loop()
 
-    # def _make_folders(self):
-    #     if not os.path.exists(self._dev_dir):
-    #         os.makedirs(self._dev_dir)
-
-    # @classmethod
-    # def get_instance(cls, *args, **kwargs):
-    #     if cls._instance is None:
-    #         cls._instance = super().__new__(cls, *args, **kwargs)
-    #         cls.__init__(cls._instance, args, **kwargs)
-    #     return cls._instance
-
-    def __init__(self) -> None:
-        self._dev_dir = os.path.join(RESOURCES_DIR, "devices")
-        self._devices = self.get_all_devices()
-
-    def __len__(self):
-        return len(self._devices)
-
-    def __getitem__(self, position):
-        return self._devices[position]
-
-    def get_all_devices(self):
-        devices = []
-        for dev in os.listdir(self._dev_dir):
-            if dev.endswith(".json"):
-                with open(os.path.join(self._dev_dir, dev)) as data:
-                    devices.append(Device.parse_raw(data.read()))
-        return devices
+    dev_dir = await _get_source_dir(RESOURCES_DIR, "devices")
+    async for file_dev in _get_file_from_dir(dev_dir):
+        if file_dev.endswith(".json"):
+            try:
+                yield await loop.run_in_executor(
+                    None, _sync_open_file_for_read, dev_dir, file_dev)
+            except Exception as err:
+                pass
 
 
-dev = Devices()
-for d in dev:
-    print(d)
+async def update_device_status(dev: Device, status: str) -> None:
+    loop = asyncio.get_running_loop()
+
+    dev_dir = await _get_source_dir(RESOURCES_DIR, "devices")
+    dev.status = status
+    await loop.run_in_executor(
+        None, _sync_open_file_for_write, dev_dir, dev)
+
+
+def _sync_open_file_for_write(dev_dir: str, dev: Device) -> None:
+    with open(os.path.join(dev_dir, dev.name + '.json'), 'w') as f:
+        return f.write(dev.json())
+
+
+def _sync_open_file_for_read(dev_dir: str, file_dev: str) -> Device:
+    with open(os.path.join(dev_dir, file_dev)) as data:
+        return Device.parse_raw(data.read())
+
+
+async def _get_source_dir(RESOURCES_DIR: str, filename: str) -> str:
+    return os.path.join(RESOURCES_DIR, filename)
+
+
+async def _get_file_from_dir(dev_dir: str):
+    for file_dev in os.listdir(dev_dir):
+        yield file_dev

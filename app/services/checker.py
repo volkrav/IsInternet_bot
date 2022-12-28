@@ -1,13 +1,22 @@
 import asyncio
 
 from app import config
-from app.services.utils import get_now_formatted, is_day
-from app.models.devices import Device, Devices
+from app.models.devices import Device, get_all_devices, update_device_status
+from app.services.notify import notify_user_of_status_change
 
 
-connect_times = {'prev_time': '', 'curr_time': ''}
+async def check_current_devices_status(session) -> None:
+    timeout = 10
+    while True:
+        await asyncio.sleep(timeout)
+        async for dev in get_all_devices():
+            curr_status = await _get_current_status(session, dev)
+            if dev.status != curr_status:
+                await update_device_status(dev, curr_status)
+                await notify_user_of_status_change(session, dev)
 
-async def sending_ping_request(_, ip) -> bool:
+
+async def _sending_ping_request(_, ip) -> bool:
     reply = await asyncio.create_subprocess_shell(
         f"ping -c 1 -n {ip}",
         stdout=asyncio.subprocess.PIPE,
@@ -15,11 +24,10 @@ async def sending_ping_request(_, ip) -> bool:
     )
 
     stdout, stderr = await reply.communicate()
-
     return reply.returncode == 0
 
 
-async def sending_web_request(session, url) -> bool:
+async def _sending_web_request(session, url) -> bool:
     try:
         async with session.get(url) as resp:
             return resp.status == 200
@@ -27,42 +35,21 @@ async def sending_web_request(session, url) -> bool:
         return False
 
 
-async def set_time_connect(session) -> None:
-
-    while True:
-        await asyncio.sleep(3)
-        for dev in Devices().get_all_devices():
-            if config.PING:
-                check_connect = sending_ping_request
-                url = dev.ip
-            else:
-                check_connect = sending_web_request
-                url = 'http://' + dev.ip + ':' + config.port + '/'
-            if await check_connect(session, url):
-                connect_times['curr_time'] = get_now_formatted()
-
-async def report(session) -> None:
+async def _get_current_status(session, dev: Device) -> str:
     connect_counter = 0
-    connect_state = '🔴 Немає світла'
-    current_state = ''
+    number_of_requests = 3
+    if config.PING:
+        check_connect = _sending_ping_request
+        url = dev.ip
+    else:
+        check_connect = _sending_web_request
+        url = 'http://' + dev.ip + ':' + dev.port + '/'
     while True:
-        await asyncio.sleep(5)
-        if connect_times['prev_time'] != connect_times['curr_time']:
-            connect_times['prev_time'] = connect_times['curr_time']
+        if await check_connect(session, url):
             connect_counter = 0
-            connect_state = '🟢 Є світло'
+            return 'online'
         else:
-            if connect_counter < 5:
+            if connect_counter < number_of_requests:
                 connect_counter += 1
             else:
-                connect_state = '🔴 Немає світла'
-        if current_state != connect_state:
-            current_state = connect_state
-            msg = f'{current_state}%0A{connect_times["curr_time"]}'
-            if is_day():
-                try:
-                    await session.get(
-                        config.API_link + f'/sendMessage?chat_id={config.chat_id}&text={msg}'
-                    )
-                except:
-                    pass
+                return 'offline'
