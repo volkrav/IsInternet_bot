@@ -1,10 +1,11 @@
 import asyncio
 import asyncpg
+import aiohttp
 import random
 
 from app.data.db_api import update_device, get_last_row
 from app.models.devices import Device, create_device
-from app.services.checker import _sending_ping_request
+from app.services.checker import _sending_ping_request, check_current_devices_status
 
 N_WORKERS = 1000
 
@@ -18,17 +19,17 @@ async def print_name(pool: asyncpg.Pool, device: Device):
     # await update_device(pool, data.get('id'))
 
 
-async def worker(queue: asyncio.Queue, pool):
+async def worker(session: aiohttp.ClientSession, queue: asyncio.Queue, pool: asyncpg.Pool):
     while True:
-        row = await queue.get()
-        await print_name(pool, row)
+        device: Device = await queue.get()
+        await check_current_devices_status(session, pool, device)
         queue.task_done()
 
 
-async def command_check(session, pool):
+async def command_check(session: aiohttp.ClientSession, pool: asyncpg.Pool):
     queue = asyncio.Queue(N_WORKERS)
 
-    workers = [asyncio.create_task(worker(queue, pool))
+    workers = [asyncio.create_task(worker(session, queue, pool))
                for _ in range(N_WORKERS)]
 
     async for raw_device in get_last_row(pool):

@@ -67,7 +67,7 @@ async def get_last_row(pool: asyncpg.Pool):
                     yield row
 
 
-async def update_device(pool: asyncpg.Pool, id: int):
+async def update_device_last_check(pool: asyncpg.Pool, id: int):
     async with pool.acquire() as conn:
         await conn.execute(
             f'UPDATE devices '
