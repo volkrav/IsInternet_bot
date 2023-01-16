@@ -1,15 +1,15 @@
 from app import config
 from app.models.devices import Device
-from app.services.utils import get_now_formatted, is_day
+from app.misc.utils import get_now_formatted, is_day
 
 
 async def notify_user_of_status_change(session, dev: Device) -> None:
 
     msg = dev.name + '%0A' + \
         await _make_str_status(dev.status) + '%0A' + \
-        get_now_formatted()
+        await get_now_formatted()
 
-    if is_day():
+    if await is_day():
         try:
             await session.get(
                 config.API_link +
