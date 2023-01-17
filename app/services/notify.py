@@ -9,7 +9,6 @@ API_link = f'https://api.telegram.org/bot' + \
 async def notify_user_of_status_change(session,
                                        device: Device,
                                        curr_status) -> None:
-    print('start notify_user_of_status_change')
     msg = device.name + '%0A' + \
         await _make_str_status(curr_status) + '%0A' + \
         await get_now_formatted()

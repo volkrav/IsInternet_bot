@@ -30,7 +30,6 @@ async def check_current_devices_status(session: aiohttp.ClientSession,
                         })
     curr_status = await _get_current_status(session, device)
     if device.status != curr_status:
-        print(f'check_current_devices_status {device.name} - {curr_status=} - {device.status=}')
         await update_device(pool,
         device.id,
         {
@@ -38,7 +37,6 @@ async def check_current_devices_status(session: aiohttp.ClientSession,
         }
         )
         await notify_user_of_status_change(session, device, curr_status)
-    ...
 
 
 async def _sending_ping_request(_, ip: str) -> bool:
