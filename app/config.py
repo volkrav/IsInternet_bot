@@ -1,14 +1,37 @@
+from dotenv import load_dotenv, find_dotenv
+from dataclasses import dataclass
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
 
-urls = [url for url in os.environ.get('URLS').split(',') if url != '']
-bot_token = os.environ.get('TOKEN')
-chat_id = os.environ.get('CHAT_ID')
-port = os.environ.get('PORT')
-port = os.environ.get('PORT')
+load_dotenv(find_dotenv())
 
-API_link = f'https://api.telegram.org/bot' + '5522301142:AAFpmTT9UiFrqcYibr1F7Mied5CTIRqBWF0'
 
-PING = True
+@dataclass
+class TgBot:
+    token: str
+
+
+@dataclass
+class DbConfig:
+    host: str
+    database: str
+    user: str
+    password: str
+
+
+@dataclass
+class Config:
+    tg_bot: TgBot
+    db: DbConfig
+
+
+async def load_config() -> Config:
+    return Config(
+        tg_bot=TgBot(
+            token=os.environ.get('BOT_TOKEN')
+        ), db=DbConfig(
+            host=os.environ.get('DB_HOST'),
+            database=os.environ.get('DB_NAME'),
+            user=os.environ.get('DB_USER'),
+            password=os.environ.get('DB_PASS'),
+        ))

@@ -1,26 +1,27 @@
-# from app import config
+from app.config import Config
 from app.models.devices import Device
 from app.misc.utils import get_now_formatted, is_day
-
-API_link = f'https://api.telegram.org/bot' + \
-    '5522301142:AAFpmTT9UiFrqcYibr1F7Mied5CTIRqBWF0'
+from aiohttp import ClientSession
 
 
-async def notify_user_of_status_change(session,
+async def notify_user_of_status_change(session: ClientSession,
                                        device: Device,
-                                       curr_status) -> None:
+                                       curr_status,
+                                       config: Config) -> None:
+    API_link = 'https://api.telegram.org/bot' + config.tg_bot.token
     msg = device.name + '%0A' + \
         await _make_str_status(curr_status) + '%0A' + \
         await get_now_formatted()
-    print(msg)
-    if await is_day():
-        try:
-            await session.get(
-                API_link +
-                f'/sendMessage?chat_id={device.user_id}&text={msg}'
-            )
-        except Exception as err:
-            print(err.args)
+
+    if device.do_not_disturb and not await is_day():
+        return
+    try:
+        await session.get(
+            API_link +
+            f'/sendMessage?chat_id={device.user_id}&text={msg}',
+        )
+    except Exception as err:
+        print(err.args)
 
 
 async def _make_str_status(status: str) -> str:

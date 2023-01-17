@@ -8,7 +8,6 @@ asyncio = "*"
 aiohttp = "*"
 pytz = "*"
 python-dotenv = "*"
-pydantic = "*"
 asyncpg = "*"
 
 [dev-packages]

@@ -22,7 +22,8 @@ from app.services.notify import notify_user_of_status_change
 
 async def check_current_devices_status(session: aiohttp.ClientSession,
                                        pool: asyncpg.Pool,
-                                       device: Device):
+                                       device: Device,
+                                       config):
     await update_device(pool,
                         device.id,
                         {
@@ -36,7 +37,7 @@ async def check_current_devices_status(session: aiohttp.ClientSession,
             'status': curr_status
         }
         )
-        await notify_user_of_status_change(session, device, curr_status)
+        await notify_user_of_status_change(session, device, curr_status, config)
 
 
 async def _sending_ping_request(_, ip: str) -> bool:
