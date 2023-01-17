@@ -15,18 +15,20 @@ class Device(NamedTuple):
     notify: bool
     change_date: datetime.datetime | str
     user_id: int
+    last_check: datetime.datetime | str
 
 
 async def create_device(data: dict) -> Device:
     return Device(
-        id = data.get('id', None),
+        id = data.get('id'),
         name = data.get('name'),
         ip = data.get('ip'),
-        status = data.get('status', ''),
+        status = data.get('status'),
         do_not_disturb = data.get('do_not_disturb'),
-        notify = data.get('notify', True),
+        notify = data.get('notify'),
         change_date = data.get('change_date'),
-        user_id = data.get('user_id')
+        user_id = data.get('user_id'),
+        last_check = data.get('last_check')
     )
 
 

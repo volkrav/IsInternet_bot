@@ -67,16 +67,20 @@ async def get_last_row(pool: asyncpg.Pool):
                     yield row
 
 
-async def update_device_last_check(pool: asyncpg.Pool, id: int):
+async def update_device(pool: asyncpg.Pool, id: int, column_newvalues: dict):
+    columns = [column for column in column_newvalues.keys()]
+    placeholders = [f'${i+1}' for i in range(len(column_newvalues.keys()))]
+    set_condition = ', '.join([f'{column}={placeholder}'
+                               for column, placeholder in zip(columns, placeholders)])
+    new_values = [value for value in column_newvalues.values()]
     async with pool.acquire() as conn:
         await conn.execute(
             f'UPDATE devices '
-            f'SET last_check = $1 '
-            f'WHERE id = $2',
-            get_now_datetime(),
+            f'SET {set_condition} '
+            f'WHERE id = ${len(placeholders)+1}',
+            *new_values,
             id
         )
-        # print(f'<update_last_device> OK {id}')
 
 
 async def _insert(conn: asyncpg.Connection, tablename: str, column_values: dict):
