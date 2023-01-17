@@ -7,7 +7,7 @@ from app.data.db_api import update_device, get_last_row
 from app.models.devices import Device, create_device
 from app.services.checker import _sending_ping_request, check_current_devices_status
 
-N_WORKERS = 1000
+N_WORKERS = 100
 
 
 async def print_name(pool: asyncpg.Pool, device: Device):
@@ -20,9 +20,15 @@ async def print_name(pool: asyncpg.Pool, device: Device):
 
 
 async def worker(session: aiohttp.ClientSession, queue: asyncio.Queue, pool: asyncpg.Pool):
+    ids = []
     while True:
         device: Device = await queue.get()
-        await check_current_devices_status(session, pool, device)
+        print(f'\tworker - {device.status=}')
+        if device.id not in ids:
+            ids.append(device.id)
+            await check_current_devices_status(session, pool, device)
+            ids.remove(device.id)
+
         queue.task_done()
 
 

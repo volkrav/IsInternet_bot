@@ -9,6 +9,6 @@ chat_id = os.environ.get('CHAT_ID')
 port = os.environ.get('PORT')
 port = os.environ.get('PORT')
 
-API_link = f'https://api.telegram.org/bot' + bot_token
+API_link = f'https://api.telegram.org/bot' + '5522301142:AAFpmTT9UiFrqcYibr1F7Mied5CTIRqBWF0'
 
 PING = True

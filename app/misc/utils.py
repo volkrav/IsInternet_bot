@@ -11,7 +11,8 @@ async def get_now_datetime() -> datetime.datetime:
 
 
 async def get_now_formatted() -> str:
-    return await get_now_datetime().strftime("%H:%M:%S %d-%m-%Y")
+    now_datetime = await get_now_datetime()
+    return now_datetime.strftime("%H:%M:%S %d-%m-%Y")
 
 
 async def is_day() -> bool:

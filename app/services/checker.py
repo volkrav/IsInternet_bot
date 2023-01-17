@@ -7,7 +7,7 @@ import asyncpg
 from app.models.devices import Device
 from app.data.db_api import update_device
 from app.misc.utils import get_now_datetime
-# from app.services.notify import notify_user_of_status_change
+from app.services.notify import notify_user_of_status_change
 
 
 # async def check_current_devices_status(session) -> None:
@@ -30,8 +30,14 @@ async def check_current_devices_status(session: aiohttp.ClientSession,
                         })
     curr_status = await _get_current_status(session, device)
     if device.status != curr_status:
-        print(f'{device.name} : {device.ip} : {device.status} : {device.last_check}')
-        # await notify_user_of_status_change(session, device)
+        print(f'check_current_devices_status {device.name} - {curr_status=} - {device.status=}')
+        await update_device(pool,
+        device.id,
+        {
+            'status': curr_status
+        }
+        )
+        await notify_user_of_status_change(session, device, curr_status)
     ...
 
 

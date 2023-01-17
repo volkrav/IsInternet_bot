@@ -15,4 +15,4 @@ async def run_app(session: aiohttp.ClientSession, pool: asyncpg.Pool):
     await command_check(session, pool)
 
     # await db_create_table(pool)
-    # await create_n_rows(pool, 5)
+    # await create_n_rows(pool, 1)
