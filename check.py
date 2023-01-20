@@ -2,8 +2,6 @@ import asyncio
 import asyncpg
 import aiohttp
 import logging
-import sys
-import os
 import time
 
 from app.workers.create_workers import preparation_workers
@@ -16,9 +14,11 @@ async def main():
     logging.basicConfig(
         level=logging.INFO,
         datefmt='%d-%m-%y %H:%M:%S',
-        format=u"%(asctime)s - [%(levelname)s] - %(name)s - (%(filename)s).%(funcName)s:%(lineno)d - %(message)s",
+        format=u'%(asctime)s - [%(levelname)s] - (%(name)s).%(funcName)s:%(lineno)d - %(message)s',
+        # filename='reg_bot.log'
     )
     logger.info("Starting checker")
+
     config: Config = await load_config()
     db_connect = {'host': config.db.host,
                   'user': config.db.user,
@@ -32,8 +32,6 @@ async def main():
         except OSError:
             logger.error('cannot connect to database')
             time.sleep(5)
-            # python = sys.executable
-            # os.execl(python, python, * sys.argv)
             continue
 if __name__ == '__main__':
     try:

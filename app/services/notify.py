@@ -1,10 +1,12 @@
 import urllib.parse
+import logging
 
 from app.config import Config
 from app.models.devices import Device
 from app.misc.utils import get_now_formatted, is_day
 from aiohttp import ClientSession
 
+logger = logging.getLogger(__name__)
 
 async def notify_user_of_status_change(session: ClientSession,
                                        device: Device,
@@ -26,7 +28,9 @@ async def notify_user_of_status_change(session: ClientSession,
             # f'/sendMessage?chat_id={device.user_id}&text={msg}'
         )
     except Exception as err:
-        print(err.args)
+        logger.error(
+            f'get {err.args}'
+        )
 
 
 async def _make_str_status(status: str) -> str:

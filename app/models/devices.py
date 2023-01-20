@@ -1,9 +1,5 @@
-import asyncio
 import datetime
-import os
 from typing import NamedTuple
-
-from app.misc.utils import get_now_datetime
 
 
 class Device(NamedTuple):
@@ -20,17 +16,16 @@ class Device(NamedTuple):
 
 async def create_device(data: dict) -> Device:
     return Device(
-        id = data.get('id'),
-        name = data.get('name'),
-        ip = data.get('ip'),
-        status = data.get('status'),
-        do_not_disturb = data.get('do_not_disturb'),
-        notify = data.get('notify'),
-        change_date = data.get('change_date'),
-        user_id = data.get('user_id'),
-        last_check = data.get('last_check')
+        id=data.get('id'),
+        name=data.get('name'),
+        ip=data.get('ip'),
+        status=data.get('status'),
+        do_not_disturb=data.get('do_not_disturb'),
+        notify=data.get('notify'),
+        change_date=data.get('change_date'),
+        user_id=data.get('user_id'),
+        last_check=data.get('last_check')
     )
-
 
 
 # from pydantic import BaseModel

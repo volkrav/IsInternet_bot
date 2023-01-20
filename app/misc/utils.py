@@ -2,8 +2,8 @@ import datetime
 
 import pytz
 
-
 TZ = pytz.timezone("Europe/Kiev")
+
 
 async def get_now_datetime() -> datetime.datetime:
     now = datetime.datetime.now(TZ)

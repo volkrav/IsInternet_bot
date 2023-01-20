@@ -13,30 +13,30 @@ N_WORKERS = 100
 async def worker(session: aiohttp.ClientSession,
                  queue: asyncio.Queue,
                  pool: asyncpg.Pool,
-                 device_ids: set,
+                 id_devices_set: set,
                  config):
     while True:
         device: Device = await queue.get()
         await check_current_devices_status(session, pool, device, config)
         # await asyncio.sleep(random.randint(5, 5000) / 1000)
         try:
-            device_ids.remove(device.id)
+            id_devices_set.remove(device.id)
         except KeyError:
             print(f'worker : device_ids.remove({device.id}) get KeyError')
         queue.task_done()
 
 
 async def preparation_workers(session: aiohttp.ClientSession, pool: asyncpg.Pool, config):
-    device_ids = set()
+    id_devices_set = set()
 
     queue = asyncio.Queue(N_WORKERS)
 
-    workers = [asyncio.create_task(worker(session, queue, pool, device_ids, config))
+    workers = [asyncio.create_task(worker(session, queue, pool, id_devices_set, config))
                for _ in range(N_WORKERS)]
 
     async for raw_device in get_last_row(pool):
-        if raw_device.get('id') not in device_ids:
-            device_ids.add(raw_device.get('id'))
+        if raw_device.get('id') not in id_devices_set:
+            id_devices_set.add(raw_device.get('id'))
             await queue.put(await create_device(raw_device))
 
     await queue.join()

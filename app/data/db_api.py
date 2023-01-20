@@ -1,36 +1,50 @@
-import asyncpg
 import asyncio
+import logging
+
+import asyncpg
+
+logger = logging.getLogger(__name__)
 
 
 async def get_last_row(pool: asyncpg.Pool):
     while True:
         await asyncio.sleep(1)
-        async with pool.acquire() as conn:
-            async with conn.transaction():
-                async for row in conn.cursor(
+        try:
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    async for row in conn.cursor(
+                        '''
+                    select * from devices
+                    where notify=true
+                    order by "last_check"
                     '''
-                select * from devices
-                where notify=true
-                order by "last_check"
-                '''
-                ):
-                    yield row
+                    ):
+                        yield row
+        except Exception as err:
+            logger.error(f'get {err.args}')
+            await asyncio.sleep(60)
 
 
 async def update_device(pool: asyncpg.Pool, id: int, column_newvalues: dict):
-    columns = [column for column in column_newvalues.keys()]
-    placeholders = [f'${i+1}' for i in range(len(column_newvalues.keys()))]
-    set_condition = ', '.join([f'{column}={placeholder}'
-                               for column, placeholder in zip(columns, placeholders)])
-    new_values = [value for value in column_newvalues.values()]
-    async with pool.acquire() as conn:
-        await conn.execute(
-            f'UPDATE devices '
-            f'SET {set_condition} '
-            f'WHERE id = ${len(placeholders)+1}',
-            *new_values,
-            id
-        )
+    try:
+        columns = [column for column in column_newvalues.keys()]
+        placeholders = [f'${i+1}' for i in range(len(column_newvalues.keys()))]
+        set_condition = ', '.join([f'{column}={placeholder}'
+                                   for column, placeholder in zip(columns, placeholders)])
+        new_values = [value for value in column_newvalues.values()]
+    except Exception as err:
+        logger.error(f'get {err.args}')
+    try:
+        async with pool.acquire() as conn:
+            await conn.execute(
+                f'UPDATE devices '
+                f'SET {set_condition} '
+                f'WHERE id = ${len(placeholders)+1}',
+                *new_values,
+                id
+            )
+    except Exception as err:
+        logger.error(f'get {err.args}')
 
 
 # async def _insert(conn: asyncpg.Connection, tablename: str, column_values: dict):
