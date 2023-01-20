@@ -26,14 +26,12 @@ async def get_last_row(pool: asyncpg.Pool):
 
 
 async def update_device(pool: asyncpg.Pool, id: int, column_newvalues: dict):
-    try:
-        columns = [column for column in column_newvalues.keys()]
-        placeholders = [f'${i+1}' for i in range(len(column_newvalues.keys()))]
-        set_condition = ', '.join([f'{column}={placeholder}'
-                                   for column, placeholder in zip(columns, placeholders)])
-        new_values = [value for value in column_newvalues.values()]
-    except Exception as err:
-        logger.error(f'get {err.args}')
+    columns = [column for column in column_newvalues.keys()]
+    placeholders = [f'${i+1}' for i in range(len(column_newvalues.keys()))]
+    set_condition = ', '.join([f'{column}={placeholder}'
+                                for column, placeholder in zip(columns, placeholders)])
+    new_values = [value for value in column_newvalues.values()]
+
     try:
         async with pool.acquire() as conn:
             await conn.execute(

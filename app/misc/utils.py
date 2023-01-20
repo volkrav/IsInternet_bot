@@ -16,4 +16,4 @@ async def get_now_formatted() -> str:
 
 
 async def is_day() -> bool:
-    return 7 < datetime.datetime.now(TZ).hour < 24
+    return 6 < datetime.datetime.now(TZ).hour < 23
