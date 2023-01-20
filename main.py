@@ -2,6 +2,9 @@ import asyncio
 import asyncpg
 import aiohttp
 import logging
+import sys
+import os
+import time
 
 from app.workers.create_workers import preparation_workers
 from app.config import load_config, Config
@@ -12,7 +15,8 @@ logger = logging.getLogger(__name__)
 async def main():
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - [%(levelname)s] - %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s",
+        datefmt='%d-%m-%y %H:%M:%S',
+        format=u"%(asctime)s - [%(levelname)s] - %(name)s - (%(filename)s).%(funcName)s:%(lineno)d - %(message)s",
     )
     logger.info("Starting checker")
     config: Config = await load_config()
@@ -20,15 +24,23 @@ async def main():
                   'user': config.db.user,
                   'password': config.db.password,
                   'database': config.db.database}
-
-    async with aiohttp.ClientSession() as session:
-        async with asyncpg.create_pool(**db_connect, command_timeout=60) as pool:
-            await asyncio.gather(asyncio.create_task(preparation_workers(session, pool, config)))
-
+    while True:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with asyncpg.create_pool(**db_connect, command_timeout=60) as pool:
+                    await asyncio.gather(asyncio.create_task(preparation_workers(session, pool, config)))
+        except OSError:
+            logger.error('cannot connect to database')
+            time.sleep(5)
+            # python = sys.executable
+            # os.execl(python, python, * sys.argv)
+            continue
 if __name__ == '__main__':
     try:
         asyncio.run(main())
+    except OSError:
+        logger.error('cannot connect to database')
     except KeyboardInterrupt:
         logger.warning("Stoping checker")
     except Exception as err:
-        logger.error(f'Get {err.args}')
+        logger.error(f'Checker get {err.args}')
