@@ -46,7 +46,7 @@ async def check_current_devices_status(session: aiohttp.ClientSession,
 
 
 async def _sending_ping_request(_, ip: str) -> bool:
-    timeout = 2
+    timeout = 6
     try:
         reply = await asyncio.create_subprocess_shell(
             f"ping -c 1 -t {timeout} {ip}",
