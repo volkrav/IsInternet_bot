@@ -20,47 +20,60 @@ logger = logging.getLogger(__name__)
 #                 await update_device_status(dev, curr_status)
 #                 await notify_user_of_status_change(session, dev)
 
+
 async def check_current_devices_status(session: aiohttp.ClientSession,
                                        pool: asyncpg.Pool,
                                        device: Device,
                                        config):
-    try:
-        await update_device(pool,
-                            device.id,
-                            {
-                                'last_check': await get_now_datetime()
-                            })
-    except Exception as err:
-        logger.error(
-            f'get {err.args}'
-        )
     curr_status = await _get_current_status(session, device)
     if device.status != curr_status:
-        await update_device(pool,
-        device.id,
-        {
-            'status': curr_status
-        }
-        )
+        try:
+            await update_device(pool,
+                                device.id,
+                                {
+                                    'status': curr_status,
+                                    'change_date': await get_now_datetime()
+                                }
+                                )
+        except Exception as err:
+            logger.error(
+                f'get {err.args}'
+            )
+            return
         await notify_user_of_status_change(session, device, curr_status, config)
 
 
+async def _get_current_status(session, device: Device) -> str:
+    connect_counter = 0
+    number_of_requests = 5
+    while True:
+        if await _sending_ping_request(session, device.ip):
+            connect_counter = 0
+            return 'online'
+        else:
+            if connect_counter < number_of_requests:
+                await asyncio.sleep(.5)
+                connect_counter += 1
+            else:
+                return 'offline'
+
+
 async def _sending_ping_request(_, ip: str) -> bool:
-    timeout = 6
+    timeout = 2
     try:
         reply = await asyncio.create_subprocess_shell(
-            f"ping -c 1 -t {timeout} {ip}",
+            f"ping -c 1 -W {timeout} {ip}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
 
         stdout, stderr = await reply.communicate()
+        return reply.returncode == 0
     except Exception as err:
         logger.error(
             f'get {err.args}'
         )
-
-    return reply.returncode == 0
+        return False
 
 
 # async def _sending_web_request(session: aiohttp.ClientSession, url: str) -> bool:
@@ -69,23 +82,3 @@ async def _sending_ping_request(_, ip: str) -> bool:
 #             return resp.status == 200
 #     except Exception:
 #         return False
-
-
-async def _get_current_status(session, device: Device) -> str:
-    connect_counter = 0
-    number_of_requests = 5
-    while True:
-        try:
-            if await _sending_ping_request(session, device.ip):
-                connect_counter = 0
-                return 'online'
-            else:
-                if connect_counter < number_of_requests:
-                    await asyncio.sleep(.5)
-                    connect_counter += 1
-                else:
-                    return 'offline'
-        except Exception as err:
-            logger.error(
-                f'get {err.args}'
-            )

@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import asyncpg
 import aiohttp
@@ -5,9 +6,12 @@ import random
 
 from app.data.db_api import update_device, get_last_row
 from app.models.devices import Device, create_device
-from app.services.checker import _sending_ping_request, check_current_devices_status
+from app.services.checker import check_current_devices_status
+from app.misc.utils import get_now_datetime
 
 N_WORKERS = 100
+
+logger = logging.getLogger(__name__)
 
 
 async def worker(session: aiohttp.ClientSession,
@@ -17,7 +21,18 @@ async def worker(session: aiohttp.ClientSession,
                  config):
     while True:
         device: Device = await queue.get()
-        await check_current_devices_status(session, pool, device, config)
+        try:
+            await update_device(pool,
+                                device.id,
+                                {
+                                    'last_check': await get_now_datetime()
+                                })
+            await check_current_devices_status(session, pool, device, config)
+        except Exception as err:
+            logger.error(
+                f'get {err.args}'
+            )
+
         # await asyncio.sleep(random.randint(5, 5000) / 1000)
         try:
             id_devices_set.remove(device.id)
