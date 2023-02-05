@@ -68,6 +68,8 @@ async def _sending_ping_request(_, ip: str) -> bool:
         )
 
         stdout, stderr = await reply.communicate()
+        if reply.returncode != 0:
+            raise Exception(stderr)
         return reply.returncode == 0
     except Exception as err:
         logger.error(

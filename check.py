@@ -15,7 +15,7 @@ async def main():
         level=logging.INFO,
         datefmt='%d-%m-%y %H:%M:%S',
         format=u'%(asctime)s - [%(levelname)s] - (%(name)s).%(funcName)s:%(lineno)d - %(message)s',
-        filename='checkbot.log'
+        # filename='checkbot.log'
     )
     logger.info("Starting checker")
 
